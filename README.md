@@ -32,13 +32,13 @@ These are my notes taken during the learning session, may contain info but unabl
 
 [ docker pull hmjain/docker_day2:v1 ] - pull docker image from docker repo. you should have credentials to push
 
-[ docker system prune ] - clears cached data or images unused
+[ docker system prune ] - clears cached data or images unused, same can be done with volume too.
 
 [ docker system prune -f ] - Forceful prune
 
 [ docker run -it --name test-container ubuntu bash ] - login in to container
 
-[ docket run -it --rm -v my-docker-volume:/data ubuntu bash] - this will create a volume in local my-dokcer-volume and data from "data" folder of the docker will be copied to new volume. --rm is used to kill the container after exit. volumes are of two types named and unnamed. Named are created by user with meaningful name.<br>When prune is done this data will stay but unnamed volume will be cleared.
+[ docket run -it --rm -v my-docker-volume:/data ubuntu bash] - this will create a volume in local my-dokcer-volume and data from "data" folder of the docker will be copied to new volume. --rm is used to kill the container after exit. Volumes are of two types Named volume and Unnamed volume. Named volumes are created by user with meaningful name.<br>When prune is done this data will stay but unnamed volume will be cleared.
 
 [ docker volume ls ] - gives list of volume
 
