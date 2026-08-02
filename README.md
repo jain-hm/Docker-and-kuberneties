@@ -38,7 +38,7 @@ These are my notes taken during the learning session, may contain info but unabl
 
 [ docker run -it --name test-container ubuntu bash ] - login in to container
 
-[ docket run -it --rm -v my-docker-volume:/data ubuntu bash] - this will create a volume in local my-dokcer-volume and data from "data" folder of the docker will be copied to new volume. --rm is used to kill the container after exit. Volumes are of two types Named volume and Unnamed volume. Named volumes are created by user with meaningful name.<br>When prune is done this data will stay but unnamed volume will be cleared.
+[ docket run -it --rm -v my-docker-volume:/data ubuntu bash] - this will create a volume in local my-dokcer-volume and data from "data" folder of the docker will be copied to new volume. --rm is used to kill the container after exit. Volumes are of two types Named volume and Unnamed volume. Named volumes are created by user with meaningful name.<br>* When prune is done this data will stay but unnamed volume will be cleared.
 
 [ docker volume ls ] - gives list of volume
 
