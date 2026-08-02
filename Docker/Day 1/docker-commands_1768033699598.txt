@@ -1,0 +1,267 @@
+############################################# Docker Installation and Setup on host #############################################
+sudo apt-get update   # Update the packages on local machine
+sudo apt-get install  ca-certificates curl gnupg  lsb-release   # installing pre requisite packages for docker
+sudo mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg ## Add Docker’s official GPG key
+
+## set up the repository:
+
+  echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null  
+
+sudo apt-get update   # Again update the packages on local machine
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin  # Install Docker packages
+sudo systemctl enable docker && sudo systemctl start docker  ## Start the docker daemon service and make it persistent across restart.
+
+
+############################################# Docker Initialization and interaction #############################################
+docker info # Information about docker setup
+docker ps   # To display currently running container(s)
+docker ps -a # To display all ( currently Running + Previously running/stopped/existed/started containers).
+docker run hello-world # Pull image named hello-world and launch a container with random name
+docker run -it ubuntu  # pull image named ubuntu and launch a container with random name in interactive mode (where we can run linux command INSIDE container).
+docker run -it --rm ubuntu # Launches a container in interactive mode and stops+removes the container when you exit the container.
+docker run -it --name=ubuntu-container ubuntu  # pull image named ubuntu and launch a container with NAME=ubuntu-container in interactive mode.
+docker run -it --name=ubuntu-container ubuntu bash # # pull image named ubuntu and launch a container with name ubuntu-container and exec into the container as well
+docker run -d --name=nginx-server nginx # Launch a nginx container in background detacthed mode, need to additionaly exec into it if needed.
+docker stop/start/restart/pause/kill  <<Container-NAME OR ID>>    # Stops,starts,restarts,pauses/kills the container
+docker rm <<Container-NAME OR ID>>   # Remove a stopped container.
+docker rm <<Container-NAME OR ID>> -f  # Remove a running OR stopped container forcefully. 
+docker exec -it <container_id> sh   # Login inside the container and get "sh" shell access after a container is started.
+docker logs <container_id>          # View logs of container
+docker inspect container/image # Detailed json info about container/image
+
+docker stop $(docker ps -q)       # STOP ALL RUNNING CONTAINERS IN 1 COMMAND, USE CAREFULLY AND ONLY FOR QUICKLY STOPPING ALL RUNNING CONTAINERS
+docker stop $(docker ps -aq)       # STOP ALL RUNNING/STOPPED/EXITED CONTAINERS IN 1 COMMAND, USE VERY CAREFULLY AND ONLY FOR QUICK CLEANUP ON LAB Machine
+docker history <<IMAGEID:TAG>>   # Shows all commands/layers used by the image.
+############################################# Building and managing custom docker container images #############################################
+docker build -t myapp:latest .             # Build image using Dockerfile ( should be present in current working DIR)
+docker build -f Dockerfile.dev -t myapp:dev . # Build image using custom Dockerfile
+docker images # List All Local Images
+docker history <<IMAGE-NAME:TAG>>/<<IMAGE-ID>>  # docker history 03da9ab9afb6  OR docker history myapp:latest    ### To display all instructions of Dockerfile used to create this image.
+
+############################################# Tagging Pushing to Dockrhub #############################################
+Confirm what is the DockerHub repo where you want to push. It could be yours repo or some other person/Organization. If its in format <<DOCKERHUB-ACCOCUNT>>/<<repository-name>>:<tag-name> 
+ you need to tag your image matching this format. Tagging only creates a renamed image, it doesnt push it automatically. It is like a shotcut or a pointer (pointing to actual image), not complete file. But while pushing, actual image is pushed.
+
+docker tag myapp:latest saurabhnegi2306/docker-practice-repo:latest   # tagging/renaming myapp:latest to saurabhnegi2306/docker-practice-repo:latest. Only repository/application name is changed.
+docker tag myapp:V1.0 saurabhnegi2306/docker-practice-repo:latest     # tagging/renaming myapp:V1.0 to saurabhnegi2306/docker-practice-repo:latest. Both repository/application & Tag are changed.
+
+Now we can push this image using :   ( docker login required. Alos access to target repository ( if owned by other person).)
+docker login                        # Log in to Docker Hub using docker hub loginID and EITHER password or PersonalAccess_Token ( can be generated from DockerHub account of the repository owner)
+docker push saurabhnegi2306/docker-practice-repo:latest       
+For other repositories (github Container, AWS ECR etc) tagging and push process remains the same, login steps are different based on the platform.
+
+
+#################################################### Local Registry Server ####################################################
+docker run -d -p 5000:5000 --restart=always --name local-registry-server registry:2     ## Starting your registry on local machine port 5000, 
+docker pull ubuntu:latest  ## Pulling images from the docker hub
+docker image tag ubuntu:latest localhost:5000/gfg-image   ## Tagging an image and point to registry
+docker push localhost:5000/gfg-image   ## Pushing the image
+docker pull localhost:5000/gfg-image   ##  Pulling the image back
+curl http://localhost:5000/v2/_catalog ## Using cURL to Check if the image is listed in the registry
+docker container stop local-registry-server   ## Stop the registry-server on local machine
+
+
+####################################################   Cleanup Prune Commands    ####################################################
+
+docker system prune      ## Removes all unused data: containers, networks, images, build cache.
+docker container prune  ## Removes stopped containers.
+docker image prune        ## Removes unused images (dangling by default).
+docker volume prune      ## Removes unused anonymous volumes not referenced by any container. Named volumes are not deleted even if not used by any container.
+docker network prune    ## Removes unused networks (not used by any container).
+docker builder prune      ## Cleans up build cache from docker build.
+
+
+####################################################     Named Volumes    ####################################################
+
+docker volume create my-docker-vol   # creates a volume (Directory) @ /var/lib/docker/volumes/<<VOLUME-NAME>>/_data/.
+docker run -it --rm -v my-docker-vol:/data ubuntu bash   # mounts docker volume "my-docker-vol" inside container at path "/data".
+docker inspect my-docker-vol  # Describe volume to check its location on local machine,  /var/lib/docker/volumes/<<VOLUME-NAME>>/_data/
+docker run -it --rm -v my-docker-vol:/data -v my-docker-logs:/tmp ubuntu bash   # To mount multiple volumes to container at diff mount paths.
+
+####################################################   Anonymous Volumes    #################################################### 
+
+docker run -it --rm -v /data ubuntu bash  # creates a random volume (Directory) @ /var/lib/docker/volumes/<<RANDOM-VOLUME-NAME>>/_data/.
+When container is removed, its anonymous volume will stay ( unless --rm option used while docker run) and can be removed via "docker volume rm" or "docker volume prune" command.
+
+####################################################     Mount Volume    ####################################################
+docker run -it --name bind-test -v /home/labuser/mydata:/data ubuntu bash   # by default read-write access is given to container over shared host directory.
+docker run -it --name bind-test -v /home/labuser/mydata:/data:ro ubuntu bash        # To allow ReadOnly access to container, so that can only read files from host but not write into host. 
+
+
+####################################################   tmpfs Volume ####################################################
+docker run -it --tmpfs /app:rw,size=500M busybox sh   # Launches a “busybox” container with 500Mb memory ( reserved in RAM, to be used on demand, not immediately). tmpfs doesn't consume RAM until you write to it.
+df -h   # Command to see /app mount being used as tmpfs volume with 500M size. 
+docker system df # Overview of disk usage by docker components
+docker system df -v  # Detailed Check Disk Usage per Container/Image
+
+####################################################  Day-3 : Docker compose  ####################################################
+### Docker compose is used to deploy 1 or many services together as a package ( called docker compose file) which we then can scale/remove/update using 1 command. ###
+docker compose up              # Start the services in interactive mode.
+docker compose up -d           # Start the services in detached mode. Containers running in background.
+docker compose -f myapp-compose.yml up -d  # # Start the services in detached mode. Custom compose file.
+docker compose -f docker-compose-new.yaml -p new-project up -d # To create a new PROJECT with a separate docker-compose.yml file. By default it picks up current DIR name as project and you wont be able to deploy 2 separate docker-compose file in same DIR unless separate project names are given. 
+docker compose ps              # Check containers created so far.
+docker compose ls              # lists all running Compose projects on your Docker host.
+docker compose logs            # Current logs printed on the terminal.   
+docker compose logs -f         # Continuous logs printing on the terminal.
+docker compose up --scale <<SERVICE_NAME>>=2  # Scale service "<<SERVICE_NAME>>" to 2 replicas.
+docker compose down            # stops all replicas of containers,network mentioned in docker-compose.yaml but not volume.
+docker compose down -v         # stops all replicas of containers,network mentioned in docker-compose.yaml and removes volume as well.
+
+####################################################  Day-3 :   Docker Swarm ####################################################
+## Docker swarm is needed in complex and advanved production grade environment where there are multiple containers running in a large configuration ##
+## There can be 1 or more manager nodes but internally they elect ONLY 1 LEADER NODE using RAFT consensus/agreement which executes the command ( executed from either of the manager node). ##
+## Quorum : MIN no of nodes which must agree to elect a leader without ambiguity. Formula : lower(N/2)+1. ##
+## If 1 manager node : quorum=1, No redundancy in the cluster, manager dies, all containers are orphaned.
+## If 2 manager nodes: quorum = 2. Some redundancy but for quorum we need 2 nodes. So even if 1 disconnects/dies, other one cant elect itself as a leader as it needs 2 nodes as per quorum. Hence cluster stays without leader evenwith 1 manager reachable. ##
+## If 3 manager nodes: quorum = 2 ( Minimum recommended for production) : Redundancy. If 1 manager disconnects/dies, remaining 2 can still elect a leader among themselves since together they have quorum of 2.
+//                                                                                    If 2 manager dies, 1 still active, quorum cant be achieved and cluster in bad state.
+## If 4 manager nodes: quorum = 3 (not recommended). 1 manager dies, 3 still active, build quorum and no impact.
+//                                                   2 manager dies, 2 still active, quorum cant be achieved and cluster in bad state. 
+//                                                   So only 1 failure allowed ( Same as if we had 3 manager nodes, so no benefit of adding 1 extra manager)
+## IMPORTANT : Thats why its advised to have minimum 3 manager nodes ( so that we have 1 failure tolerance) and beyond that advised to use odd no of managers.
+## We can deploy single service ( 1 or multiple replicas) or multiple services using a STACK file ( mostly similar to a docker compose file). ###
+
+curl -s http://169.254.169.254/latest/meta-data/instance-type   # To get the instance type of the EC2 lab machine.Just to have idea about its specs ( CPU/Memory config)
+
+docker swarm init  # Initializes swarm/cluster. Provides a join command like below to allow other nodes to join a worker node.
+            /// docker swarm join --token SWMTKN-1-501fuvfx07xcc2u19qdt2qtiif7304bhvzmwclp52qxz3clfxz-9ipibx6uugnw0q2eww94qsqu8 172.31.19.242:2377 //
+docker swarm join-token manager   # To See token for joining as a manager
+docker swarm join-token worker    # To See token for joining as a worker
+
+docker swarm join-token manager   # To get the token, which you can runon other nodes and make them master nodes. 
+       //// docker swarm join --token SWMTKN-1-4lblx7avxr7qvq699lr7mvnfskc14swnspfrkbczl7wvb2cht8-478xyxak42h2pbs9pk2nig1ef 172.31.23.224:2377
+
+
+docker system info | grep -A5 "Swarm"   # Show Swarm status in Docker Info
+docker node ls # list the nodes in the swarm.
+docker node inspect <<NODE_ID>> --pretty
+docker node update --availability pause <NODE-ID> # Use for temp maintenance.You don’t want to schedule new tasks but want to keep running ones.Checking logs or monitoring behavior before a restart.
+docker node update --availability drain <NODE-ID>  # Drain the node, Docker will automatically reschedule the running tasks on other available nodes.
+docker node update --availability active <NODE-ID> # Bring it back online, node is ready to run tasks normally. Default State of node.
+docker node update --label-add region=us-east <NODE-ID> # Add a label
+docker node update --label-rm region <NODE-ID> # Remove a label
+docker node promote <NODE-ID or NAME>  # Promote a worker → manager:
+docker node demote <NODE-ID or NAME>   # Demote a manager → worker:
+docker node rm <<NODENAME1>> <<NODENAME2>>  --force ( use force if node not reachable)
+docker swarm leave # For workers to leave the swarm(cluster). Managers can also leave, as long another manager node is available in swarm else it will throw error. (--force can make cluster in an orphan state)
+docker swarm leave --force    # Instruct local node to exit the swarm. 
+
+## Docker service command is used to interact on service level ( either standalone service or a service from stack) ## 
+docker service create --name nginx-app --mode global nginx   # To launch a global service( exactly 1 container per node, like daemonset in kubernetes).
+docker service create –-name nginx-app –replicas 2 -p 8081:80 nginx:latest  # To launch a replicated service.
+docker service update --network-add internal-network nginx-app   # To attach a custom network to the service and start new containers.
+docker service update --replicas 5 <<SERVICE_NAME>>  # Updates the service definition.Equivalent to redeploying the service with a new replica count.
+docker service scale <<SERVICE_NAME>>=4   # Shortcut command for scaling.uses service update behind the scene. 
+docker service ps nginx-app
+docker service scale nginx-app=1
+docker service inspect nginx-app --prett 
+
+#### Docker stack is a collection of interconnected services(applciation containers) which we usually want to deploy/manage colelctively ######
+#### STACK creates SERVICE(S) =>  SERVICE creates TASKS , based on no of replicas => Each TASK is a CONTAINER with container name = <STACK-NAME>_<SERVICE-NAME>.<REPLICA-SERIAL-NO>.TASK-ID
+docker stack ls : List all stacks
+docker stack ps <<STACK-NAME>>  : List all tasks ( From different serviced mentioned in stack deploy.yml file) running on different nodes.
+docker stack services <<STACK-NAME>>  # Lists all services that belong to the stack, type(global or replicated), count of replcias, imagae-name etc.
+docker stack rm my-stack  # Remove the stack and all its tasks
+
+docker service ls  # Shows all services running in the Swarm cluster.
+docker service inspect <<SERVICE_NAME>>   # Shows detailed JSON info about the service (frontend in this example).
+docker service ps <<SERVICE_NAME>>  # Shows where replicas are running, desired state, and container IDs.
+docker service update --image frontend-image:v2 <<SERVICE_NAME>>   #  Updates the image (rolling update).
+docker service update --network-add <<NETWORK_NAME>> <<SERVICE_NAME>>   # Update network attached to a service in swarm mode.
+docker service logs <<SERVICE_NAME>>  # Shows logs from all replicas of the backend service.
+docker service rm <<SERVICE_NAME>>  # Deletes the service from Swarm (but not the whole stack).
+
+
+####################################################  Docker Networking  ########################################################
+
+docker network ls   # List all networks
+docker network inspect bridge  # Inspect the bridge network  
+docker inspect bridge | egrep -iA5 "Config.*\["  # Get the Subnet and gateway of DEFAULT bridge network. Gateway is defined on Docker0 interface of host machine.
+docker network create --driver bridge/overlay/macvlan my_bridge   # Create a network, docker decides subnets/ips.
+docker network create --subnet=<subnet_ip_range> --gateway=<gateway_ip> <network_name> # Creating a network with a custom subnet and gateway
+docker network create --internal internal_net   # Create internal bridge network, with no internet access.
+docker run -dit --name container1 --network my_bridge nginx   #  Run a container on a specific network,-dit: Detached mode, interactive, with TTY.
+docker network connect my_bridge container1  # Connect a container to an additional network, 1 container can connect to multi networks,
+docker network disconnect my_bridge container1  # Disconnect a container from a network
+docker network rm my_bridge  # Remove an unused network
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' container1   # Check container IP
+docker run -dit --name web -p 8080:80 nginx  # Expose container ports. -p host_port:container_port: Maps container port to host.
+
+docker run --net container:<container_name> nicolaka/netshoot    #  share the network namespace of another container with netshoot.
+docker run -it --rm --network my_custom_net nicolaka/netshoot    #  share the docker network of 1 container with netshoot ( with own IP,own ports).
+
+####################################################  Docker System Directory Structure ####################################################
+
+/var/lib/docker/  : This is the main storage location used by Docker on Linux hosts. It contains all data related to Docker, including: Images , Containers,Volumes,Networks,Storage driver files,Layer metadata
+
+* overlay2/ or aufs/   # Depends on storage driver, overlay2 is default. Stores image layers and container writable layers.
+   |-- diff/ or upper/ → writable layer (container file changes which are not in original image template)
+   |-- lower/ → image layers   ( Layers from image, read only data)
+   |-- merged/ → combined view (what container sees as a total combining image template and custom diles/Drirectories)
+   |-- work/ → internal operations for copy-on-write ( Files which are in image template but modified by users,template file is not modified, a different version is stored for docker usage).
+
+* containers/ # Contains metadata and log files for each container. 
+* image/overlay2 # Stores metadata about downloaded images. Image IDs,Layer relationships, Repositories and tags information.
+* volumes/  # Contains data for all named volumes.
+* network/  # Stores network configuration and metadata. Information about bridges, overlays, custom networks, IPAM (IP address management).
+* tmp/  # Temporary files used during image builds, pulling layers, etc. Automatically cleaned up by Docker.
+* builder/ # Holds cache data used when building Docker images with Dockerfile.
+* plugins/  # Contains Docker volume, network, or authorization plugins for extending Docker capabilities.
+
+####################################################  Docker Networking  ####################################################
+Docker containers don’t get special privileges — they’re just Linux processes managed smartly.
+To stop one container from consuming all CPU or memory from host machine, Docker uses cgroups (control groups).
+
+With cgroup v2, all controls are unified in one place — /sys/fs/cgroup/.
+$ mount | grep cgroup    # To check which cgroup version host machine is using. 
+
+Output should be something like : cgroup2 on /sys/fs/cgroup type cgroup2 (rw,nosuid,nodev,noexec,relatime,seclabel,nsdelegate,memory_recursiveprot)
+
+
+When you run a container with limits (--memory, --cpus), Docker writes these limits to files like memory.max and cpu.max.
+The Linux kernel continuously monitors and enforces these values — if the container exceeds them, it gets throttled or killed.
+docker run -it   --memory="512m" --cpus="1.5"   ubuntu  # Launch an ubuntu container with memory limited to 512MB and max allowed 1.5 CPU cores.
+
+docker inspect <<CONTAINER-ID>> --format 'Memory limit: {{.HostConfig.Memory}}, CPUs: {{.HostConfig.NanoCpus}}'   # To check allowed memory/CPU limits
+
+sudo ls /sys/fs/cgroup/system.slice/ | grep <<CONTAINERID>>   # To show directory with container specific resource limits.
+cd /sys/fs/cgroup/system.slice/docker-<<CONTAINER-ID>>   # To switch to container specific directory to view cgroup related files
+cat memory.max   # Shows allocated memory in bytes  divide it by 1024 to get memory size in KB , and dive further by 1024 to get memory size in MB.
+cat cpu.max  #  50000 → the quota (allowed CPU time in microseconds) 100000 → the period (total available CPU time) so its like 0.5 cpu assigned to us.
+
+docker stat  # To show containers and their real time resource utilization
+
+stress --cpu 10 --timeout 30   # To simulate laod testing requiring 10 cpus, container
+stress --vm 1 --vm-bytes 300M --timeout 20s   # To do dummy load teting inside container for 300MB memory 
+stress --vm 4 --vm-bytes 300M --timeout 20s   # To do dummy load teting inside container for 300MB memory  x 4 times parallel ( --vm 4)
+stress --cpu 200 --vm 2 --vm-bytes 200M --timeout 30s   # combine CPU and Memory stress testing in 1 command.
+
+
+cat /sys/fs/cgroup/memory.events   # To heck inside container how many times OOM Occured.
+/sys/fs/cgroup/system.slice/docker-<<CONTAINER-ID>>.scope]$ watch -n 1 cat  memory.events   # watch it live on host machine
+
+
+####################################################  Image Scanning ####################################################
+curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin    # Install trivy
+
+trivy image nginx:latest       # Downloads a local vulnerability database and scans each package inside the image against known vulnerability
+trivy config Dockerfile        # Scans dockerfile for any issues with instructions in Dockerfile
+trivy fs .                     # scan local directories Vulnerable libraries, Secrets (AWS keys, passwords), Misconfigurations in IaC files
+
+####################################################  Image Signing ####################################################
+Cosign Installation : 
+      - curl -O -L "https://github.com/sigstore/cosign/releases/download/v3.0.3/cosign_3.0.3_arm64.deb"
+      - sudo dpkg -i cosign_3.0.3_arm64.deb
+      - sudo cp /usr/bin/cosign /usr/local/bin/cosign
+Image signing using Cosign :
+      - cosign generate-key-pair   # Generated publick key (cosign.pub) and Private key (cosign.key). Will ask for password for private key (keep it secure).
+      - docker build -t cosign-example .   # Build an docker image using Dockerfile in current PATH
+      - docker tag cosign-example:latest 7225944552296.dkr.ecr.eu-central-1.amazonaws.com/advop-release-images/vop-migration:latest
+      - docker tag cosign-example:latest saurabhnegi2306/my-signed-image-new:cosign   # Tage newly created image to match target Repo format
+      - docker push saurabhnegi2306/my-signed-image-new:cosign  # Push newly tagged image to target Repo using repo's naming convention ( username/repo-name).
+      - cosign sign --key cosign.key saurabhnegi2306/my-signed-image-new:cosign     # Signing Docker Images with Cosign private key,uploaded signature in repo metadata.
+## For verifying the image, implementer can use : 
+      - cosign verify  --key cosign.pub saurabhnegi2306/my-signed-image-new:cosign   # Usign public key, which can be shared to end users.

@@ -1,0 +1,27 @@
+# 1. Base image
+FROM nginx:alpine
+# 2. Metadata about the image
+LABEL description="Nginx web server serving static HTML and Docker"
+# 4. Build-time temp variable (can be overridden at build time), this is not persisting inside container
+ARG PAGE_TITLE="Welcome to Dockerized Nginx"
+# 5. Set working directory, container will start with this Home directory
+WORKDIR /usr/share/nginx/html
+# 6. Copy custom HTML file to web root
+COPY index.html /usr/share/nginx/html/
+# 3. Set environment variable. Can be override during docker run.
+ENV KUBECTL_VERSION=v1.29.0
+# 7. ADD can copy additional Remote URL and auto extract .tar file. Like kubectl
+ADD https://github.com/jqlang/jq/releases/download/jq-1.8.1/jq-1.8.1.tar.gz /tmp/
+# 8. Declare a volume for persistent/static content bound to host machine (optional)
+VOLUME ["/usr/share/nginx/html"]
+# 9. Run a command during build
+RUN mkdir -p /var/cache/nginx/client_temp /run && \
+    chown -R nginx:nginx /var/cache/nginx /run
+#10. Set a custom user (nginx runs as this user by default, can be checked with “user” command in container.)
+USER root
+# 11. Document exposed port (used by Nginx)
+EXPOSE 80
+# 12. Use custom entrypoint (overrides default, optional)
+ENTRYPOINT ["/bin/sh", "-c"]
+# 13. Default command (print a welcome message and start nginx)
+CMD ["nginx -g 'daemon off;'"]
