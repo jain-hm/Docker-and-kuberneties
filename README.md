@@ -46,3 +46,5 @@ These are my notes taken during the learning session, may contain info but unabl
 
 [ docker inspect volume_name ] - gives details of volume, same can be done using container image name
 
+[ docker run -it --tmpfs /app:rw,size=500M busybox sh ] - Launches a “busybox” container with 500Mb memory ( reserved in RAM, to be used on demand, not immediately). tmpfs doesn't consume RAM until you write to it. No additional volume created for tmpfs storage. Temporary volume we can check inside container using “df -h” command.
+
