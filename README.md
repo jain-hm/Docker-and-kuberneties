@@ -31,3 +31,12 @@ These are my notes taken during the learning session, may contain info but unabl
 [ docker push hmjain/docker_day2:v1 ] - push the image to docker hub
 
 [ docker pull hmjain/docker_day2:v1 ] - pull docker image from docker repo. you should have credentials to push
+
+[ docker system prune ] - clears cached data or images unused
+
+[ docker system prune -f ] - Forceful prune
+
+[ docker run -it --name test-container ubuntu bash ] - login in to container
+
+[ docket run -it --rm -v my-docker-volume:/data ] - this will create a volume in local my-dokcer-volume and data from "data" folder of the docker will be copied to new volume. --rm is used to kill the container after exit.
+
