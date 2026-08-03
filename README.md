@@ -48,9 +48,34 @@ These are my notes taken during the learning session, may contain info but unabl
 
 [ docker run -it --tmpfs /app:rw,size=500M busybox sh ] - Launches a “busybox” container with 500Mb memory ( reserved in RAM, to be used on demand, not immediately). tmpfs doesn't consume RAM until you write to it. No additional volume created for tmpfs storage. Temporary volume we can check inside container using “df -h” command.
 
-[ docker compose up -d ] - runs all the images, default docker-compose.yml and deploy it on current folder name
+[ docker compose up -d ] - runs all the images, default docker-compose.yml/compose.yml and deploy it on current folder name
+
+[ docker compose -p hasmukh_project_prod up -d ] - default docker-compose.yml and deploy it in custom project
+
+[ docker compose -f docker-compose_prod.yml -p hasmukh_project_prod up -d ] - deploy custom docker-compose.yml and deploy it on custom project
 
 [ docker compose down ] - shutdown all the images
 
-[ docker compose -f docker-compose_prod,yml -p hasmukh_project_prod up -d ] - deploy custom docker-compose.yml and deploy it on custom project
+[ docker compose down -v ] - shutdown all the images and clean the volume
 
+[ docker compose -p project-name down -v ] - shutdown the specific project and clean the volume
+
+1#docker compose up -d  : Default docker-compose.yml/compose.yml and deploy it in current-folder-name project
+
+NAME                     STATUS              CONFIG FILES
+
+labuser                  running(2)          /home/labuser/docker-compose.yml
+
+ 
+2#docker compose -p saurabh_project_prod up -d  : Default docker-compose.yml/compose.yml and deploy it in custom project
+
+NAME                     STATUS              CONFIG FILES
+
+saurabh_project_prod_2   running(1)          /home/labuser/docker-compose.yml
+ 
+
+3#docker compose -f  docker-compose_prod.yml  -p saurabh_project_prod up -d : Deploy custom docker-compose-file and deploy it in custom project 
+
+NAME                     STATUS              CONFIG FILES
+
+saurabh_project_prod     running(1)          /home/labuser/docker-compose_prod.yml
