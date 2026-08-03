@@ -48,3 +48,9 @@ These are my notes taken during the learning session, may contain info but unabl
 
 [ docker run -it --tmpfs /app:rw,size=500M busybox sh ] - Launches a “busybox” container with 500Mb memory ( reserved in RAM, to be used on demand, not immediately). tmpfs doesn't consume RAM until you write to it. No additional volume created for tmpfs storage. Temporary volume we can check inside container using “df -h” command.
 
+[ docker compose up -d ] - runs all the images, default docker-compose.yml and deploy it on current folder name
+
+[ docker compose down ] - shutdown all the images
+
+[ docker compose -f docker-compose_prod,yml -p hasmukh_project_prod up -d ] - deploy custom docker-compose.yml and deploy it on custom project
+
