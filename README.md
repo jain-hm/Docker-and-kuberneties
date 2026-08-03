@@ -63,19 +63,14 @@ These are my notes taken during the learning session, may contain info but unabl
 1#docker compose up -d  : Default docker-compose.yml/compose.yml and deploy it in current-folder-name project
 
 NAME                     STATUS              CONFIG FILES
-
 labuser                  running(2)          /home/labuser/docker-compose.yml
-
  
 2#docker compose -p saurabh_project_prod up -d  : Default docker-compose.yml/compose.yml and deploy it in custom project
 
 NAME                     STATUS              CONFIG FILES
-
 saurabh_project_prod_2   running(1)          /home/labuser/docker-compose.yml
  
-
 3#docker compose -f  docker-compose_prod.yml  -p saurabh_project_prod up -d : Deploy custom docker-compose-file and deploy it in custom project 
 
 NAME                     STATUS              CONFIG FILES
-
 saurabh_project_prod     running(1)          /home/labuser/docker-compose_prod.yml
