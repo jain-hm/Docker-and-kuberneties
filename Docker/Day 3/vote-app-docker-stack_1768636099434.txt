@@ -1,0 +1,72 @@
+services:
+  # 1. Redis Cache/Queue
+  redis:
+    image: redis:alpine
+    # Define deployment rules for Swarm
+    deploy:
+      mode: replicated
+      replicas: 1  # Only one replica needed for the cache
+      resources:
+        limits:
+          memory: 128M
+
+  # 2. PostgreSQL Database
+  db:
+    image: postgres:9.4
+    environment:
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres'
+    # Volumes are essential for persistent state in a Swarm deployment
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    deploy:
+      mode: replicated
+      replicas: 1  # Only one primary replica for the database
+      placement:
+        constraints:
+          - node.role == manager 
+
+  # 3. Voting Frontend (Python)
+  vote:
+    image: dockersamples/examplevotingapp_vote:latest
+    ports:
+      # Expose container on host port 5000, mapped to container port 80
+      - "80:80" 
+    deploy:
+      mode: replicated
+      replicas: 3 # Scale the frontend to 3 replicas for high availability/load balancing
+      update_config:
+        parallelism: 1
+        delay: 20s
+        failure_action: rollback  # or pause (default, stop updating further tasks) , continue ( keep updating despite failures)
+      resources:
+        limits:
+          memory: 512M
+
+  # 4. Worker Backend Processor (C# / .NET)
+  worker:
+    image: dockersamples/examplevotingapp_worker:latest
+    deploy:
+      mode: replicated
+      replicas: 2 # Two worker replicas to ensure message processing continues if one fails
+
+  # 5. Results Dashboard (Node.js)
+  result:
+    image: dockersamples/examplevotingapp_result:latest
+    ports:
+      # Expose on host port 5001, mapped to container port 80
+      - "8080:80" 
+    deploy:
+      mode: replicated
+      replicas: 2 # Two replicas for the results dashboard
+      update_config:
+        parallelism: 1
+        delay: 10s
+      resources:
+        limits:
+          memory: 256M
+
+volumes:
+  # Define the named volume for PostgreSQL data persistence
+  db-data:
+

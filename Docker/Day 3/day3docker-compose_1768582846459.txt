@@ -1,0 +1,26 @@
+################## Docker Compose ##############################
+
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "8082:80"
+    volumes:
+    - ./index.html:/usr/share/nginx/html/index.html
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/mydatabase
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRESS_DB: mydatabase
+      POSTGRESS_USER: user
+    volumes:
+     - db_data:/var/lib/postgresql/data
+volumes:
+      db_data:
+
+
+## To Create above compose file  : docker compose -f <<filename>>.yaml  up -d      
+## When using docker-compose.yml : docker compose up -d
+## To stop services : docker compose -f -f <<filename>>.yaml  down
