@@ -23,4 +23,4 @@ volumes:
 
 ## To Create above compose file  : docker compose -f <<filename>>.yaml  up -d      
 ## When using docker-compose.yml : docker compose up -d
-## To stop services : docker compose -f -f <<filename>>.yaml  down
+## To stop services : docker compose -f <<filename>>.yaml  down
