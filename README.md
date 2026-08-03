@@ -60,17 +60,18 @@ These are my notes taken during the learning session, may contain info but unabl
 
 [ docker compose -p project-name down -v ] - shutdown the specific project and clean the volume
 
-1#docker compose up -d  : Default docker-compose.yml/compose.yml and deploy it in current-folder-name project
+1# docker compose up -d  : Default docker-compose.yml/compose.yml and deploy it in current-folder-name project<br>
 
-NAME                     STATUS              CONFIG FILES
-labuser                  running(2)          /home/labuser/docker-compose.yml
+NAME                     STATUS              CONFIG FILES<br>
+labuser                  running(2)          /home/labuser/docker-compose.yml<br>
  
-2#docker compose -p saurabh_project_prod up -d  : Default docker-compose.yml/compose.yml and deploy it in custom project
+2# docker compose -p saurabh_project_prod up -d  : Default docker-compose.yml/compose.yml and deploy it in custom project<br>
 
-NAME                     STATUS              CONFIG FILES
-saurabh_project_prod_2   running(1)          /home/labuser/docker-compose.yml
+NAME                     STATUS              CONFIG FILES<br>
+saurabh_project_prod_2   running(1)          /home/labuser/docker-compose.yml<br>
  
-3#docker compose -f  docker-compose_prod.yml  -p saurabh_project_prod up -d : Deploy custom docker-compose-file and deploy it in custom project 
+3# docker compose -f  docker-compose_prod.yml  -p saurabh_project_prod up -d : Deploy custom docker-compose-file and deploy it in custom project <br>
 
-NAME                     STATUS              CONFIG FILES
-saurabh_project_prod     running(1)          /home/labuser/docker-compose_prod.yml
+NAME                     STATUS              CONFIG FILES<br>
+saurabh_project_prod     running(1)          /home/labuser/docker-compose_prod.yml<br>
+
