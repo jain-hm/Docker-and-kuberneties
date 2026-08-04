@@ -75,3 +75,20 @@ saurabh_project_prod_2   running(1)          /home/labuser/docker-compose.yml<br
 NAME                     STATUS              CONFIG FILES<br>
 saurabh_project_prod     running(1)          /home/labuser/docker-compose_prod.yml<br>
 
+[ docker service create --name nginx-app --replicas 2 -p 8081:80 nginx:latest ] - this will create multiple nodes in a container
+
+[ docker service ls ] - live docker services
+
+[ docker service ps ] - list of tasks
+
+[ docker service scale ngnix-app=1oo ] - this will create 100 replicas, in the system
+
+[ docker ps | wc -1 ] - this will say total running services details
+
+[ docker node ls ] - list of nodes
+
+[ docker stack deploy -c stack.yml mystack ] - will create and run stack
+
+[ docker stack ps mystack ] - gives list fo the containers in the stack
+
+
