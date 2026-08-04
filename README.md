@@ -91,4 +91,4 @@ saurabh_project_prod     running(1)          /home/labuser/docker-compose_prod.y
 
 [ docker stack ps mystack ] - gives list fo the containers in the stack
 
-
+[ docker run -dit --name host_nginx --network host nginx ]
